@@ -211,17 +211,15 @@ def supports_stop_words(self) -> bool:
 
 If your LLM doesn't support stop words natively:
 
+Use the shared `BaseLLM` helper to stop at the earliest matching word in the response, regardless of the order of `self.stop`. When a stop word matches, the helper trims whitespace around the truncated content. If none matches, it returns the content unchanged.
+
 ```python
 def call(self, messages, tools=None, callbacks=None, available_functions=None):
     response = self._make_api_call(messages, tools)
     content = response["choices"][0]["message"]["content"]
     
-    # Manually truncate at stop words
-    if self.stop:
-        for stop_word in self.stop:
-            if stop_word in content:
-                content = content.split(stop_word)[0]
-                break
+    # Truncate at the earliest matching stop word
+    content = self._apply_stop_words(content)
     
     return content
 

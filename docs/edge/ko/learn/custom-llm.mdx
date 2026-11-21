@@ -211,17 +211,15 @@ def supports_stop_words(self) -> bool:
 
 만약 사용 중인 LLM이 스톱 워드를 기본적으로 지원하지 않는다면:
 
+공유 `BaseLLM` 도우미를 사용하면 `self.stop`의 순서와 관계없이 응답에서 가장 먼저 일치하는 스톱 워드에서 중단됩니다. 스톱 워드가 일치하면 잘린 내용의 앞뒤 공백을 제거합니다. 일치하는 단어가 없으면 내용은 변경되지 않습니다.
+
 ```python
 def call(self, messages, tools=None, callbacks=None, available_functions=None):
     response = self._make_api_call(messages, tools)
     content = response["choices"][0]["message"]["content"]
     
-    # Manually truncate at stop words
-    if self.stop:
-        for stop_word in self.stop:
-            if stop_word in content:
-                content = content.split(stop_word)[0]
-                break
+    # Truncate at the earliest matching stop word
+    content = self._apply_stop_words(content)
     
     return content
 

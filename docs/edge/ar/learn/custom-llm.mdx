@@ -53,3 +53,21 @@ result = crew.kickoff()
 طريقة `call()` هي قلب تنفيذ LLM. يجب أن تقبل الرسائل وتعيد استجابة نصية وتعالج الأدوات واستدعاء الدوال إذا كانت مدعومة.
 
 يغطي هذا الدليل أساسيات تنفيذ LLM مخصصة في CrewAI.
+
+## دعم كلمات التوقف
+
+إذا كان مزود LLM لا يدعم كلمات التوقف بشكل أصلي، فاستخدم دالة `BaseLLM` المشتركة لإيقاف الرد عند أول كلمة توقف تظهر فيه، بصرف النظر عن ترتيب `self.stop`. عند العثور على كلمة توقف، تزيل الدالة المسافات البيضاء حول النص المقتطع. وإذا لم يتم العثور على أي كلمة، يبقى النص كما هو.
+
+```python
+def call(self, messages, tools=None, callbacks=None, available_functions=None):
+    response = self._make_api_call(messages, tools)
+    content = response["choices"][0]["message"]["content"]
+
+    # Truncate at the earliest matching stop word
+    content = self._apply_stop_words(content)
+
+    return content
+
+def supports_stop_words(self) -> bool:
+    return False  # Tell CrewAI we handle stop words manually
+```

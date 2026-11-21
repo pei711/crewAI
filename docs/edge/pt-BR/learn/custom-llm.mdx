@@ -72,8 +72,20 @@ O CrewAI adiciona automaticamente `"\nObservation:"` como stop word para control
 
 Se o seu LLM não suporta stop words nativamente:
 
+Use o método compartilhado de `BaseLLM` para interromper a resposta na primeira stop word encontrada, independentemente da ordem de `self.stop`. Quando uma stop word corresponde, o método remove os espaços em branco ao redor do conteúdo truncado. Se nenhuma corresponder, o conteúdo permanece inalterado.
+
 ```python
-# (não traduzir blocos de código)
+def call(self, messages, tools=None, callbacks=None, available_functions=None):
+    response = self._make_api_call(messages, tools)
+    content = response["choices"][0]["message"]["content"]
+
+    # Truncate at the earliest matching stop word
+    content = self._apply_stop_words(content)
+
+    return content
+
+def supports_stop_words(self) -> bool:
+    return False  # Tell CrewAI we handle stop words manually
 ```
 
 ## Chamada de Funções
